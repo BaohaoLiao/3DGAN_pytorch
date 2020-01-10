@@ -15,7 +15,6 @@ class LR2HRTrainDataset(Dataset):
 
     def crop(self):
         datas = self.directory.split(':')
-
         lr = []
         hr = []
         for data in datas:
@@ -23,22 +22,18 @@ class LR2HRTrainDataset(Dataset):
             for f in files:
                 data = h5py.File(f, 'r')
                 shape =  np.shape(data['/lr'])
-                for i in range(shape[0] // self.img_size):
-                    for j in range(shape[1] // self.img_size):
-                        for k in range(shape[2] // self.img_size):
-                            lr_image = np.expand_dims(data['/lr'][i*self.img_size:(i+1)*self.img_size,
-                                                  j*self.img_size:(j+1)*self.img_size,
-                                                  k*self.img_size:(k+1)*self.img_size], axis=0)
-                            hr_image = np.expand_dims(data['/hr'][i*self.img_size:(i+1)*self.img_size,
-                                                  j*self.img_size:(j+1)*self.img_size,
-                                                  k*self.img_size:(k+1)*self.img_size], axis=0)
+                for i in range(shape[0] // (2 * self.img_size)):
+                    for j in range(shape[1] //  (2 * self.img_size)):
+                        for k in range(shape[2] //  (2 * self.img_size)):
+                            lr_image = np.expand_dims(data['/lr'][i*2*self.img_size:(i+1)*2*self.img_size,
+                                                  j*2*self.img_size:(j+1)*2*self.img_size,
+                                                  k*2*self.img_size:(k+1)*2*self.img_size], axis=0)
+                            hr_image = np.expand_dims(data['/hr'][i*2*self.img_size:(i+1)*2*self.img_size,
+                                                  j*2*self.img_size:(j+1)*2*self.img_size,
+                                                  k*2*self.img_size:(k+1)*2*self.img_size], axis=0)
 
-                            # scale between -1 and 1
-                            lr.append(self.scale(lr_image))
-                            hr.append(self.scale(hr_image))
-
-                del lr[-1]
-                del hr[-1]
+                            lr.append(lr_image)
+                            hr.append(hr_image)
         return lr, hr
 
     def scale(self, image):
@@ -52,9 +47,28 @@ class LR2HRTrainDataset(Dataset):
         assert len(self.lr) == len(self.hr), 'unmatched lr and hr length'
         return len(self.lr)
 
+    def randomCrop(self, image):
+        top = np.random.randint(0,  self.img_size)
+        left = np.random.randint(0, self.img_size)
+        front = np.random.randint(0, self.img_size)
+        out = image[:, top:top+self.img_size, left:left+self.img_size, front:front+self.img_size]
+        return out
+
     def __getitem__(self, index):
-        lr = torch.from_numpy(self.lr[index]).type(torch.FloatTensor)
-        hr = torch.from_numpy(self.hr[index]).type(torch.FloatTensor)
+        lr = self.lr[index]
+        hr = self.lr[index]
+
+        # RandomCrop
+        lr = self.randomCrop(lr)
+        hr = self.randomCrop(hr)
+
+        # Rescale
+        lr = self.scale(lr)
+        hr = self.scale(hr)
+
+        # to Tensor
+        lr = torch.from_numpy(lr).type(torch.FloatTensor)
+        hr = torch.from_numpy(hr).type(torch.FloatTensor)
         return lr, hr
         
             

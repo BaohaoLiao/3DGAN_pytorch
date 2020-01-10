@@ -45,6 +45,7 @@ class StyleGAN(GAN):
         self.pixel_loss = pixel_loss(loss_type=self.hparams.pixel_loss_type)
         self.pixel_loss_weight = args.pixel_loss_weight
         self.adversarial_loss = adversarial_loss(self.discriminator)
+        self.val_loss = pixel_loss(loss_type='l1')
  
         # cache for generated images
         self.generated_imgs = None
@@ -126,7 +127,7 @@ class StyleGAN(GAN):
     def validation_step(self, batch, batch_idx):
         lr, hr = batch
         self.generated_imgs = self.forward(lr)
-        val_loss = self.pixel_loss(self.generated_imgs, hr)
+        val_loss = self.val_loss(self.generated_imgs, hr)
 
         # in DP mode (default) make sure if result is scalar, there's another dim in the beginning
         if self.trainer.use_dp or self.trainer.use_ddp2:
@@ -158,7 +159,7 @@ class StyleGAN(GAN):
     def test_step(self, batch, batch_idx):
         lr, hr = batch
         fake_img = self.forward(lr)
-        test_loss = self.pixel_loss(fake_img, hr)
+        test_loss = self.val_loss(fake_img, hr)
 
         # in DP mode (default) make sure if result is scalar, there's another dim in the beginning
         if self.trainer.use_dp or self.trainer.use_ddp2:
@@ -169,7 +170,8 @@ class StyleGAN(GAN):
         })
   
         # save test images
-        self.save_images(fake_img[0])
+        #img_blocks = [lr[0][0, :, :, :].to('cpu'), hr[0][0, :, :, :].to('cpu'), fake_img[0][0, :, :, :].to('cpu')]
+        #self.save_images(img_blocks)
         imgs = [lr[0][0, 0, :, :].to('cpu'), hr[0][0, 0, :, :].to('cpu'), fake_img[0][0, 0, :, :].to('cpu')]
         self.image_show(imgs)
         return output
@@ -236,11 +238,12 @@ class StyleGAN(GAN):
                              num_workers=self.hparams.num_workers)
         return dataloader
 
-    def save_images(self, image):
-        image = image.cpu()
-        f = os.path.join(self.hparams.save_test_images, 'checkpoint_' + str(self.current_epoch) + '_gen.h5')
+    def save_images(self, images):
+        f = os.path.join(self.hparams.save_test_images, 'generated.h5')
         hf = h5py.File(f, 'w')
-        hf.create_dataset('/gen', data=image)
+        hf.create_dataset('/lr', data=images[0])
+        hf.create_dataset('/hr', data=images[1])
+        hf.create_dataset('/gen', data=images[2])
         hf.close
 
     def image_show(self, imgs):
@@ -248,17 +251,20 @@ class StyleGAN(GAN):
         imgs: lr, hr, fake
         """
         fig = plt.figure()
-        a = fig.add_subplot(1,3,1)
+        a = fig.add_subplot(1, 3, 1)
         plt.imshow(imgs[0])
         a.set_title('input')
-        b = fig.add_subplot(1,3,2)
+        plt.axis('off')
+        b = fig.add_subplot(1, 3, 2)
         plt.imshow(imgs[1])
         b.set_title('ground truth')
-        c = fig.add_subplot(1,3,3)
-        plt.imshow(imgs[0])
+        plt.axis('off')
+        c = fig.add_subplot(1, 3, 3)
+        plt.imshow(imgs[2])
         c.set_title('generated')
-        
-        f = os.path.join(self.hparams.save_test_images, 'checkpoint_' + str(self.current_epoch) + '_gen.png')
+        plt.axis('off')
+
+        f = os.path.join(self.hparams.save_test_images, 'generated.png')
         plt.savefig(f)
  
 @register_gan_architecture('stylegan', 'stylegan')
