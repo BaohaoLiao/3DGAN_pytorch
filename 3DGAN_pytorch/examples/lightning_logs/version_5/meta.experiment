@@ -1,0 +1,1 @@
+{"name": "lightning_logs", "version": 5, "tags_path": "/u/bliao/Github/3DGAN_pytorch/examples/lightning_logs/version_5/meta_tags.csv", "metrics_path": "/u/bliao/Github/3DGAN_pytorch/examples/lightning_logs/version_5/metrics.csv", "autosave": false, "description": null, "created_at": "2020-01-08 16:14:15.905741", "exp_hash": "lightning_logs_v5"}

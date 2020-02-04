@@ -3,20 +3,19 @@ import torch.nn as nn
 from torch.nn.modules.loss import _Loss
 
 class adversarial_loss(_Loss):
-    def __init__(self, discriminator):
-        super().__init__()
-        self.D_net = discriminator
+    def __init__(self):
+        super(adversarial_loss, self).__init__()
         self.loss = nn.BCEWithLogitsLoss()
 
-    def forward(self, img, mode='opt_G', real_loss=True):
+    def forward(self, compress, mode='opt_G', real_loss=True):
         if mode == 'opt_G':
-            valid = torch.ones(img.size(0), 1).to(img.device)
-            loss = self.loss(self.D_net(img), valid)
+            valid = torch.ones(compress.size(0), 1).to(compress.device)
+            loss = self.loss(compress, valid)
         if mode == 'opt_D':
             if real_loss:
-                valid = torch.ones(img.size(0), 1).to(img.device)
-                loss = self.loss(self.D_net(img), valid)
+                valid = torch.ones(compress.size(0), 1).to(compress.device)
+                loss = self.loss(compress, valid)
             else:
-                fake = torch.zeros(img.size(0), 1).to(img.device)
-                loss = self.loss(self.D_net(img.detach()), fake)
+                fake = torch.zeros(compress.size(0), 1).to(compress.device)
+                loss = self.loss(compress, fake)
         return loss

@@ -1,5 +1,5 @@
 import os
-from argparse import ArgumentParser
+from subprocess import check_output
 
 import torch
 import pytorch_lightning as pl
@@ -34,11 +34,11 @@ def early_stop(args):
         early_stop_callback = None
     return early_stop_callback
 
+
 def main():
     #parser = options.get_training_parser()
     parser = options.get_all_parser()
     args = options.parse_args_and_arch(parser)
- 
     torch.manual_seed(args.seed)
    
     # Saving log and images

@@ -11,12 +11,13 @@ class LR2HRTrainDataset(Dataset):
         self.to_tensor = transforms.ToTensor()
         self.directory = args.train_subset
         self.img_size = args.img_size
-        self.lr, self.hr = self.crop()
+        self.lr, self.hr, self.kernel = self.crop()
 
     def crop(self):
         datas = self.directory.split(':')
         lr = []
         hr = []
+        kernel = []
         for data in datas:
             files = glob.glob(data+'/*.h5')
             for f in files:
@@ -32,9 +33,10 @@ class LR2HRTrainDataset(Dataset):
                                                   j*2*self.img_size:(j+1)*2*self.img_size,
                                                   k*2*self.img_size:(k+1)*2*self.img_size], axis=0)
 
+                            kernel += data['/kernel']
                             lr.append(lr_image)
                             hr.append(hr_image)
-        return lr, hr
+        return lr, hr, kernel
 
     def scale(self, image):
         maximum = np.max(image)
@@ -44,7 +46,7 @@ class LR2HRTrainDataset(Dataset):
         return image
 
     def __len__(self):
-        assert len(self.lr) == len(self.hr), 'unmatched lr and hr length'
+        assert len(self.lr) == len(self.hr) == len(self.kernel), 'unmatched lr, hr and kernel length'
         return len(self.lr)
 
     def randomCrop(self, image):
@@ -56,7 +58,7 @@ class LR2HRTrainDataset(Dataset):
 
     def __getitem__(self, index):
         lr = self.lr[index]
-        hr = self.lr[index]
+        hr = self.hr[index]
 
         # RandomCrop
         lr = self.randomCrop(lr)
@@ -69,7 +71,9 @@ class LR2HRTrainDataset(Dataset):
         # to Tensor
         lr = torch.from_numpy(lr).type(torch.FloatTensor)
         hr = torch.from_numpy(hr).type(torch.FloatTensor)
-        return lr, hr
+        #kernel = torch.from_numpy(self.kernel[index]).type(torch.IntTensor)
+        kernel = torch.as_tensor(self.kernel[index])
+        return lr, hr, kernel
         
             
         

@@ -9,7 +9,7 @@ from . import (
 class VGG(GANDiscriminator):
     def __init__(self, args):
         super().__init__()
-        self.features = Features(args.channels)
+        self.features = Features(args.num_channels)
         self.dense_layer = FC()
 
     @staticmethod

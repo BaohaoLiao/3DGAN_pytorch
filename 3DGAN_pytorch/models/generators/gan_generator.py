@@ -16,10 +16,10 @@ class GANGenerator(nn.Module):
         """Build a new generator instance."""
         raise NotImplementedError('GANGenerators must implement the build_model method')
 
+    """
     def forward(self, input):
-        """
-        Args:
-            input(LongTensor): 
-        """
+        #Args:
+        #    input(LongTensor):
         raise NotImplementedError
+    """
 

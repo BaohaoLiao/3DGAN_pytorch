@@ -31,7 +31,7 @@ def get_parser():
     parser = argparse.ArgumentParser()
     # fmt: off
     parser.add_argument('--train-or-test', type=str)
-    parser.add_argument('--progress-bar', type=bool, default=False,
+    parser.add_argument('--progress-bar', action='store_true', default=False,
                         help='whether to disable progress bar')
     parser.add_argument('--seed', default=1, type=int, metavar='N',
                         help='pseudo random number generator seed')
@@ -49,8 +49,8 @@ def add_dataset_args(parser, train=False, test=False):
     group.add_argument('--batch-size', type=int, metavar='N',
                        help='maximum image in a batch')
     group.add_argument("--img-size", type=int,
-                       help="size of each image dimension") #change to patch size
-    group.add_argument("--channels", type=int, default=1, 
+                       help="size of each image dimeansion") #change to patch size
+    group.add_argument("--num-channels", type=int, default=1,
                        help="number of image channels")
     #if train:
     group.add_argument('--train-subset', default='train', metavar='SPLIT',

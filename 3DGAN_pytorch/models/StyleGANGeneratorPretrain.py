@@ -124,8 +124,8 @@ class StyleGANGeneratorPretrain(GAN):
         })
   
         # save test images
-        #img_blocks = [lr[0][0, :, :, :].to('cpu'), hr[0][0, :, :, :].to('cpu'), fake_img[0][0, :, :, :].to('cpu')]
-        #self.save_images(img_blocks)
+        img_blocks = [lr[0][0, :, :, :].to('cpu'), hr[0][0, :, :, :].to('cpu'), fake_img[0][0, :, :, :].to('cpu')]
+        self.save_images(img_blocks)
         imgs = [lr[0][0, 0, :, :].to('cpu'), hr[0][0, 0, :, :].to('cpu'), fake_img[0][0, 0, :, :].to('cpu')]
         self.image_show(imgs)
         return output

@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-import options
 from modules.AdaIN import AdaIN
 from . import (
     GANGenerator, register_generator, register_generator_architecture,
@@ -97,7 +96,7 @@ class G_synthesis(nn.Module):
         self.adaIn2 = AdaIN(num_features[0], use_noise, use_pixel_norm, use_instance_norm) 
        
         # generate noise, only use for training
-        img_size = 128
+        #img_size = 128
         sizes = []
         sizes.append(img_size)
         for _ in range(num_res-1):

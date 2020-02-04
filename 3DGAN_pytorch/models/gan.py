@@ -16,10 +16,10 @@ class GAN(pl.LightningModule):
         """Build a new generator instance."""
         raise NotImplementedError('GANGenerators must implement the build_model method')
 
+    """
     def forward(self, input):
-        """
         Args:
-            input(LongTensor): 
-        """
+            input(LongTensor):
         raise NotImplementedError
+    """
 

@@ -3,10 +3,11 @@ import torch.nn as nn
 
 from .InstanceNorm import InstanceNorm
 from .PixelNorm import PixelNorm
+from .FC import FC
 
 class AdaIN(nn.Module):
-    def __init__(self, num_feature, use_noise, use_pixel_norm, use_instance_norm):
-        super().__init__()
+    def __init__(self, dlatent_size, num_feature, use_noise, use_pixel_norm, use_instance_norm, use_wscale):
+        super(AdaIN , self).__init__()
 
         if use_noise:
             self.noise = ApplyNoise(num_feature)
@@ -25,7 +26,7 @@ class AdaIN(nn.Module):
         else:
             self.instance_norm = None
 
-        self.style_mode = ApplyStyle(num_feature)
+        self.style_mode = ApplyStyle(dlatent_size, num_feature, use_wscale=use_wscale)
 
     def forward(self, x, noise, latent):
         if self.noise is not None:
@@ -41,7 +42,7 @@ class AdaIN(nn.Module):
 
 class ApplyNoise(nn.Module):
     def __init__(self, num_feature):
-        super().__init__()
+        super(ApplyNoise, self).__init__()
         self.weight = nn.Parameter(torch.zeros(num_feature))
         
     def forward(self, x, noise):
@@ -53,12 +54,14 @@ class ApplyNoise(nn.Module):
 
 
 class ApplyStyle(nn.Module):
-    def __init__(self, num_feature):
-        super().__init__()
+    def __init__(self, dlatent_size, num_feature, use_wscale):
+        super(ApplyStyle, self).__init__()
         self.num_feature = num_feature
-        self.conv = nn.Conv3d(num_feature, 2*num_feature, kernel_size=3, padding=1) 
+        self.linear = FC(dlatent_size, 2*num_feature, gain=1.0, use_wscale=use_wscale)
 
     def forward(self, x, latent):
-        style = self.conv(latent)
-        x = x * style[:, :self.num_feature] + style[:, self.num_feature:]
+        style = self.linear(latent) # B x channels*2
+        shape = [-1, 2, x.size(1), 1, 1, 1]
+        style = style.view(shape)  # B x 2 x channels x 1 x 1 x 1
+        x = x * (style[:, 0] + 1.) + style[:, 1]
         return x
